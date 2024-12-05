@@ -28,13 +28,17 @@ function Canvas({ selectedAssets, categories, nftName, ethAddress, solanaAddress
 
       // Convert canvas to blob asynchronously
       const canvasBlob = await new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Canvas is empty'));
-          }
-        }, 'image/png');
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Canvas is empty'));
+            }
+          },
+          'image/png',
+          1.0
+        );
       });
 
       const imageCid = await uploadToIPFS(canvasBlob, 'nft-image.png');
@@ -97,17 +101,17 @@ function Canvas({ selectedAssets, categories, nftName, ethAddress, solanaAddress
 
   const uploadToIPFS = async (fileBlob, fileName) => {
     console.log(`Uploading file ${fileName} to IPFS...`);
-  
+
     const formData = new FormData();
     formData.append('file', new File([fileBlob], fileName));
-  
+
     try {
       const response = await axios.post('/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
+
       if (response.status === 200) {
         const cid = response.data.cid;
         console.log(`File uploaded to IPFS, CID: ${cid}`);
@@ -120,9 +124,7 @@ function Canvas({ selectedAssets, categories, nftName, ethAddress, solanaAddress
       throw error;
     }
   };
-  
-  
-  
+
   const generateMetadata = (imageCid, name, solanaAddress, assets) => {
     console.log('Generating metadata...');
     return {
@@ -130,7 +132,10 @@ function Canvas({ selectedAssets, categories, nftName, ethAddress, solanaAddress
       description: 'Puppetardio presents... Build-a-Puppet on Ethereum',
       image: `https://gateway.pinata.cloud/ipfs/${imageCid}`,
       attributes: [
-        { trait_type: 'Creator\'s Solana Address', value: solanaAddress || 'Not provided' },
+        {
+          trait_type: "Creator's Solana Address",
+          value: solanaAddress || 'Not provided',
+        },
         ...Object.entries(assets).map(([cat, path]) => ({
           trait_type: cat,
           value: path.split('/').pop().split('.')[0],
@@ -154,8 +159,11 @@ function Canvas({ selectedAssets, categories, nftName, ethAddress, solanaAddress
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = `${process.env.PUBLIC_URL}${src}`;
+      img.onerror = (error) => {
+        console.error(`Failed to load image: ${src}`, error);
+        reject(error);
+      };
+      img.src = src.startsWith('/') ? src : `/${src}`; // Ensure absolute path
     });
   };
 
@@ -176,7 +184,7 @@ function Canvas({ selectedAssets, categories, nftName, ethAddress, solanaAddress
             return src ? (
               <img
                 key={idx}
-                src={`${process.env.PUBLIC_URL}${src}`}
+                src={src.startsWith('/') ? src : `/${src}`} // Ensure absolute path
                 alt={category}
                 className="canvas-layer"
               />
