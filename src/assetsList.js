@@ -3,7 +3,7 @@
 // Auto-generated assets list
 const assets = {
   "BACKGROUND": [
-    "/assets/BACKGROUND/blue-skies.png",
+    "/assets/background/blue-skies.png",
     "/assets/BACKGROUND/bushland.png",
     "/assets/BACKGROUND/fall.png",
     "/assets/BACKGROUND/flames.png",
@@ -119,4 +119,4 @@ const assets = {
   ]
 };
 
-export default assetsList;
+export default assets;
